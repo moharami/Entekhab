@@ -2,35 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateUserDetailsRequest;
 use App\Models\UserDetail;
 use App\Models\Address;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class UserDetailController extends Controller
 {
-    public function updateDetails(Request $request)
+    public function updateDetails(UpdateUserDetailsRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'national_id' => 'required|string|unique:user_details,national_id',
-            'street' => 'required|string',
-            'city' => 'required|string',
-            'state' => 'required|string',
-            'postal_code' => 'required|string',
-            'country' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $user = auth()->user();
 
         $userDetail = UserDetail::updateOrCreate(
             ['user_id' => $user->id],
             ['national_id' => $request->national_id]
         );
-
 
         $address = Address::updateOrCreate(
             ['user_id' => $user->id],
@@ -43,6 +28,10 @@ class UserDetailController extends Controller
             ]
         );
 
-        return response()->json(['message' => 'User details updated successfully'], 200);
+        return response()->json([
+            'message' => 'User details updated successfully',
+            'userDetail' => $userDetail,
+            'address' => $address
+        ], 200);
     }
 }
